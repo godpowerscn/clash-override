@@ -347,7 +347,11 @@ const customRules = {
         domainSuffix: ['warframe.com', 'prlrr.com', 'g5air.com', 'qslk.net', 'darensoft.com','gzankun.com'],
         domainKeyword: ['audiences', 'rlzy' , 'rsxt', 'g5air'],
         domain: ['h1.gzankun.com'],
-        processName: ['SunloginClient', 'SunloginClient.exe', 'AnyDesk', 'AnyDesk.exe', 'BaoMiHua.exe'],
+        processName: [
+            'SunloginClient', 'SunloginClient.exe', 'AnyDesk', 'AnyDesk.exe', 'BaoMiHua.exe',
+            'syncthing', 'syncthing.exe',
+            'tailscale', 'tailscale.exe', 'tailscaled', 'tailscaled.exe', 'tailscale-ipn.exe',
+        ],
         ruleSets: []
     },
     defaultProxy: {
@@ -432,6 +436,12 @@ function generateCustomRules() {
 }
 
 const rules = generateCustomRules()
+
+// 内网地址直连规则
+rules.push(
+    'IP-CIDR,10.168.1.0/24,DIRECT,no-resolve',
+    'IP-CIDR,10.168.2.0/24,DIRECT,no-resolve',
+)
 
 // 程序入口
 function main(config) {
