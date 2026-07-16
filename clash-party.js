@@ -201,8 +201,6 @@ const regionOptions = {
  * defaultDNS是用来解析DNS的，必须为IP
  * DNS最好不要超过两个，从业界某知名APP的文档里学的
  */
-const defaultDNS = ["tls://1.12.12.12", "tls://223.5.5.5"]
-
 const chinaDNS = [
         '223.6.6.6',
         '119.29.29.29',                    // Tencent Dnspod
@@ -252,13 +250,11 @@ const ruleProviderCommon = {
 const groupBaseOption = {
     interval: 300,
     timeout: 3000,
-    url: 'http://cp.cloudflare.com/generate_204',
+    url: 'https://cp.cloudflare.com/generate_204',
     lazy: true,
     'max-failed-times': 3,
     hidden: false,
 }
-
-
 
 // ===== 自动识别国家映射与工具 =====
 const CODE_TO_REGION = {
@@ -283,8 +279,6 @@ const CODE_TO_REGION = {
   SE: { name: 'SE瑞典', icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Sweden.png' },
   AR: { name: 'AR阿根廷', icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Argentina.png' },
 };
-
-const FLAG_TO_CODE = {};
 
 const ZH_TO_CODE = {
   '美国': 'US', '香港': 'HK', '日本': 'JP', '韩国': 'KR', '新加坡': 'SG', '中国': 'CN', '台湾': 'TW',
@@ -379,13 +373,6 @@ const customRules = {
     hkSites: {
         target: '香港网站',
         domainSuffix: ['fc2ppvdb.com'],
-        domainKeyword: [],
-        domain: [],
-        ruleSets: []
-    },
-    usSites: {
-        target: '美国网站',
-        domainSuffix: [],
         domainKeyword: [],
         domain: [],
         ruleSets: []
@@ -524,11 +511,11 @@ function main(config) {
 
     config['geox-url'] = {
         geoip:
-            'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip-lite.dat',
+            'https://ghfast.net/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip-lite.dat',
         geosite:
-            'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat',
-        mmdb: 'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country-lite.mmdb',
-        asn: 'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb',
+            'https://ghfast.net/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat',
+        mmdb: 'https://ghfast.net/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country-lite.mmdb',
+        asn: 'https://ghfast.net/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb',
     }
 
     if (!enable) {
@@ -755,7 +742,7 @@ function main(config) {
             name: 'Pixiv',
             type: 'select',
             proxies: ['默认节点', ...proxyGroupsRegionNames, '直连'],
-            url: 'http://spclient.wg.spotify.com/signup/public/v1/account',
+            url: 'https://www.pixiv.net/favicon.ico',
             icon: 'https://play-lh.googleusercontent.com/8pFuLOHF62ADcN0ISUAyEueA5G8IF49mX_6Az6pQNtokNVHxIVbS1L2NM62H-k02rLM=w240-h480-rw',
         })
     }
@@ -1031,7 +1018,7 @@ function main(config) {
             name: '国内网站',
             type: 'select',
             proxies: ['直连', '默认节点', ...proxyGroupsRegionNames],
-            url: 'http://wifi.vivo.com.cn/generate_204',
+            url: 'https://wifi.vivo.com.cn/generate_204',
             icon: 'https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/StreamingCN.png',
         }
     )
