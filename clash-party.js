@@ -241,6 +241,26 @@ const dnsConfig = {
         'geosite:private': 'system',
         'geosite:cn,steam@cn,category-games@cn,microsoft@cn,apple@cn': chinaDNS,
     },
+    // [DoH 防护] 把常见 DoH 域名强制解析到 0.0.0.0，使浏览器 Secure DNS 连接失败，
+    // 自动回退到系统 DNS（由 TUN + fake-ip 接管走代理解析）。
+    // 注意：mihomo 自身的 nameserver 用的是 IP(120.53.53.53/223.5.5.5)，不受此 hosts 影响。
+    'hosts': {
+        'dns.google': '0.0.0.0',
+        'cloudflare-dns.com': '0.0.0.0',
+        'dns.quad9.net': '0.0.0.0',
+        'dns9.quad9.net': '0.0.0.0',
+        'doh.opendns.com': '0.0.0.0',
+        'dns.adguard-dns.com': '0.0.0.0',
+        'dns.alidns.com': '0.0.0.0',
+        'doh.alidns.com': '0.0.0.0',
+        'doh.pub': '0.0.0.0',
+        'dot.pub': '0.0.0.0',
+        'dns.nextdns.io': '0.0.0.0',
+        'doh.cleanbrowsing.org': '0.0.0.0',
+        'dns.mullvad.net': '0.0.0.0',
+        'public.dns.spec.jp': '0.0.0.0',
+        'dns.twnic.tw': '0.0.0.0',
+    },
 }
 
 // 规则集通用配置
@@ -428,6 +448,33 @@ function generateCustomRules() {
 }
 
 const rules = generateCustomRules()
+
+// ===== 内核级 DoH 绕过防护 =====
+// 浏览器/应用的 Secure DNS (DoH, 端口 443) 会绕过 TUN 的 dns-hijack(any:53)，
+// 使 DNS 解析直接落到本地运营商（DNS 泄露）。阻断已知 DoH 端点后，浏览器自动回退
+// 到系统 DNS，由 mihomo 的 fake-ip(TUN 接管) 走代理解析，从内核层面消除泄露。
+// 这些 REJECT 不影响 mihomo 自身 nameserver（120.53.53.53/223.5.5.5 为 IP 直连）。
+const dohBlockDomains = [
+    'dns.google',
+    'cloudflare-dns.com',
+    'dns.quad9.net',
+    'dns9.quad9.net',
+    'doh.opendns.com',
+    'dns.adguard-dns.com',
+    'dns.alidns.com',
+    'doh.alidns.com',
+    'doh.pub',
+    'dot.pub',
+    'dns.nextdns.io',
+    'doh.cleanbrowsing.org',
+    'dns.mullvad.net',
+    'public.dns.spec.jp',
+    'dns.twnic.tw',
+]
+dohBlockDomains.forEach(d => rules.push(`DOMAIN-SUFFIX,${d},REJECT`))
+// DoH 裸 IP 端点：浏览器可能直接用 IP 发 DoH，同样拒绝以防绕过域名规则
+// 注：这些 IP 主要用于 DoH，REJECT 不影响正常网站访问（除非目标恰好是这些 IP）
+;['1.1.1.1/32', '1.0.0.1/32', '8.8.8.8/32', '8.8.4.4/32', '9.9.9.9/32', '149.112.112.112/32', '208.67.222.222/32', '208.67.220.220/32', '94.140.14.14/32', '94.140.15.15/32'].forEach(ip => rules.push(`IP-CIDR,${ip},REJECT,no-resolve`))
 
 // 内网地址直连规则
 rules.push(
