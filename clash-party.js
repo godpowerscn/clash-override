@@ -22,7 +22,7 @@ const enableUrltest = false
  * true = 启用
  * false = 禁用
  */
-const enableDnsOverride = false
+const enableDnsOverride = true
 
 // ===== 性能优化：预编译正则表达式 =====
 const RATIO_REGEX = /[xX✕✖⨉倍率](\d+(?:\.\d+)?)[xX✕✖⨉倍率]?/i
@@ -219,14 +219,18 @@ const foreignDNS = ['https://120.53.53.53/dns-query', 'https://223.5.5.5/dns-que
 const dnsConfig = {
     enable: true,
     listen: ':1053',
-    ipv6: true,
+    ipv6: false, // [优化] 关闭 IPv6 解析，避免无 IPv6 网络下 AAAA 查询超时拖慢上网
     'prefer-h3': true,
-    'use-hosts': true,
-    'use-system-hosts': true,
+    'use-hosts': false, // [优化] 不读取系统 hosts，避免本机 hosts 干扰代理解析
+    'use-system-hosts': false,
     'respect-rules': true,
     'enhanced-mode': 'fake-ip',
     'fake-ip-range': '198.18.0.1/16',
-    'fake-ip-filter': ['*', '+.lan', '+.local', '+.market.xiaomi.com'],
+    // [优化] 移除 "*"：blacklist 模式下 "*" 会让所有域名返回真实 IP，等于彻底关闭 fake-ip，
+    // 失去防 DNS 污染/分流优化效果。仅保留真正需要真实 IP 的例外（局域网、时间/NTP、小米商城）。
+    'fake-ip-filter': ['+.lan', '+.local', 'time.*.com', 'ntp.*.com', '+.market.xiaomi.com'],
+    'fake-ip-filter-mode': 'blacklist',
+    'default-nameserver': [...foreignDNS],
     nameserver: [...foreignDNS],
     'proxy-server-nameserver': [...foreignDNS],
     /**
