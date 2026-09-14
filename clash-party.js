@@ -228,7 +228,7 @@ const dnsConfig = {
     'fake-ip-range': '198.18.0.1/16',
     // [优化] 移除 "*"：blacklist 模式下 "*" 会让所有域名返回真实 IP，等于彻底关闭 fake-ip，
     // 失去防 DNS 污染/分流优化效果。仅保留真正需要真实 IP 的例外（局域网、时间/NTP、小米商城）。
-    'fake-ip-filter': ['+.lan', '+.local', 'time.*.com', 'ntp.*.com', '+.market.xiaomi.com'],
+    'fake-ip-filter': ['+.lan', '+.local', '+.ts.net', 'time.*.com', 'ntp.*.com', '+.market.xiaomi.com'],
     'fake-ip-filter-mode': 'blacklist',
     'default-nameserver': [...foreignDNS],
     nameserver: [...foreignDNS],
@@ -240,6 +240,7 @@ const dnsConfig = {
     'nameserver-policy': {
         'geosite:private': 'system',
         'geosite:cn,steam@cn,category-games@cn,microsoft@cn,apple@cn': chinaDNS,
+        '+.ts.net': 'direct',
     },
     // [DoH 防护] 已移除 hosts 0.0.0.0 映射：改为放行海外 DoH(经代理解析到境外)、仅 REJECT 国内 DoH 域名(见下方 dohBlockDomains)，避免与 mihomo 自身海外 nameserver 冲突。
 }
@@ -498,6 +499,15 @@ function main(config) {
     config['geodata-loader'] = 'memconservative'
     config['geo-auto-update'] = true
     config['geo-update-interval'] = 24
+
+    // Tailscale TUN Bypass: exclude-process 是网卡级绕过，比 PROCESS-NAME,DIRECT 更彻底
+    if (config['tun']) {
+        const existingExclude = config['tun']['exclude-process'] || []
+        config['tun']['exclude-process'] = [...new Set([...existingExclude, 'tailscaled.exe', 'tailscale-ipn.exe'])]
+
+        const existingExcludeAddr = config['tun']['route-exclude-address'] || []
+        config['tun']['route-exclude-address'] = [...new Set([...existingExcludeAddr, '100.64.0.0/10'])]
+    }
 
     config['sniffer'] = {
         enable: true,
