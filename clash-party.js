@@ -210,6 +210,10 @@ const chinaDNS = [
         ]
 
 const foreignDNS = ['https://1.1.1.1/dns-query', 'https://8.8.8.8/dns-query']
+// [修复 TUN 无法上网] 引导类 DNS 必须是本机直连可达的国内纯 IP：
+// proxy-server-nameserver 负责解析代理节点域名，若用境外 DoH（1.1.1.1/8.8.8.8）会形成
+// 「DNS 依赖代理、代理依赖 DNS」的死锁——TUN 模式下表现为完全无法上网，系统代理模式正常。
+// default-nameserver 还要求纯 IP（mihomo 规范：它用于解析 DoH 域名本身，不能再依赖域名）。
 
 /**
  * DNS相关配置
@@ -230,9 +234,9 @@ const dnsConfig = {
     // 失去防 DNS 污染/分流优化效果。仅保留真正需要真实 IP 的例外（局域网、时间/NTP、小米商城）。
     'fake-ip-filter': ['+.lan', '+.local', '+.ts.net', 'time.*.com', 'ntp.*.com', '+.market.xiaomi.com'],
     'fake-ip-filter-mode': 'blacklist',
-    'default-nameserver': [...foreignDNS],
-    nameserver: [...foreignDNS],
-    'proxy-server-nameserver': [...foreignDNS],
+    'default-nameserver': ['223.5.5.5', '119.29.29.29'], // [关键] 纯 IP + 国内直连可达
+    nameserver: [...foreignDNS], // 海外域名走境外 DoH（经代理），保留防污染设计
+    'proxy-server-nameserver': ['223.5.5.5', '119.29.29.29'], // [关键修复] 直连国内 IP 解析节点域名，打破死锁
     /**
      * 这里对域名解析进行分流
      * 由于默认dns是国外的了，只需要把国内ip和域名分流到国内dns
