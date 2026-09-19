@@ -355,6 +355,8 @@ const customRules = {
             'SunloginClient', 'SunloginClient.exe', 'AnyDesk', 'AnyDesk.exe', 'BaoMiHua.exe',
             'syncthing', 'syncthing.exe',
             'tailscale', 'tailscale.exe', 'tailscaled', 'tailscaled.exe', 'tailscale-ipn.exe',
+            'HipsDaemon', 'HipsDaemon.exe', 'HipsTray', 'HipsTray.exe',
+            'wsctrlsvc', 'wsctrlsvc.exe', 'usysdiag', 'usysdiag.exe',
             'WeChat.exe',
         ],
         ruleSets: []
@@ -504,14 +506,22 @@ function main(config) {
     config['geo-auto-update'] = true
     config['geo-update-interval'] = 24
 
-    // Tailscale TUN Bypass: exclude-process 是网卡级绕过，比 PROCESS-NAME,DIRECT 更彻底
-    if (config['tun']) {
-        const existingExclude = config['tun']['exclude-process'] || []
-        config['tun']['exclude-process'] = [...new Set([...existingExclude, 'tailscaled.exe', 'tailscale-ipn.exe'])]
+    // TUN Bypass: exclude-process 是网卡级绕过，比 PROCESS-NAME,DIRECT 更彻底。
+    // [修复] 不能用 if (config['tun']) 守卫：Clash Party 在覆写脚本执行之后才注入 TUN 模板，
+    // 此处 config['tun'] 几乎总是 undefined，导致排除项从未生效（route-exclude-address 一直为空）。
+    // 改为无条件确保 tun 段存在并写入排除项，应用合并模板时会保留这些字段。
+    config['tun'] = config['tun'] || {}
+    const tunExcludeProcesses = [
+        // Tailscale：VPN 隧道流量必须绕过 TUN，避免被劫持产生回环/超时
+        'tailscaled.exe', 'tailscale.exe', 'tailscale-ipn.exe',
+        // 火绒安全：安全软件自身流量不应经代理
+        'HipsDaemon.exe', 'HipsTray.exe', 'wsctrlsvc.exe', 'usysdiag.exe',
+    ]
+    const existingExclude = config['tun']['exclude-process'] || []
+    config['tun']['exclude-process'] = [...new Set([...existingExclude, ...tunExcludeProcesses])]
 
-        const existingExcludeAddr = config['tun']['route-exclude-address'] || []
-        config['tun']['route-exclude-address'] = [...new Set([...existingExcludeAddr, '100.64.0.0/10'])]
-    }
+    const existingExcludeAddr = config['tun']['route-exclude-address'] || []
+    config['tun']['route-exclude-address'] = [...new Set([...existingExcludeAddr, '100.64.0.0/10'])]
 
     config['sniffer'] = {
         enable: true,
